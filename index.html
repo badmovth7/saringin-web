@@ -389,7 +389,7 @@
         <button onclick="toggleGuide(false)" class="neo-btn px-2.5 py-1 bg-red-500 text-white font-bold text-xs">✕</button>
       </div>
       <ul class="text-sm space-y-2 list-disc pl-5" style="color: var(--text-muted);">
-        <li><strong>Hybrid Engine:</strong> Combines browser-side <em>Error Level Analysis (ELA)</em> with <strong>Gemini 2.5 Flash Multimodal AI</strong>.</li>
+        <li><strong>Hybrid Engine:</strong> Combines browser-side <em>Error Level Analysis (ELA)</em> with <strong>Hybrid Multimodal AI (Gemini, OpenRouter & Groq)</strong>.</li>
         <li><strong>Context Matching:</strong> Always add the social media caption when checking an image so AI can detect mismatched/parody edits even if the image was re-compressed.</li>
         <li><strong>Privacy &amp; Speed:</strong> Images are resized in your browser before analysis.</li>
       </ul>
@@ -775,9 +775,9 @@
       document.getElementById('metricSource').textContent = `${data.metrics?.source ?? score}/100`;
       document.getElementById('metricConsistency').textContent = `${data.metrics?.consistency ?? score}/100`;
 
-      document.getElementById('engineModeBadge').textContent = isLiveAI ? 'GEMINI 2.5 AI + ELA' : 'OFFLINE FALLBACK MODE';
+      document.getElementById('engineModeBadge').textContent = isLiveAI ? 'HYBRID AI + ELA' : 'OFFLINE FALLBACK MODE';
       document.getElementById('analysisEngineNote').textContent = isLiveAI
-        ? (currentLang === 'id' ? 'Terhubung langsung ke API Gemini' : 'Connected live to Gemini API')
+        ? (currentLang === 'id' ? 'Terhubung ke Mesin Verifikasi Multi-AI' : 'Connected live to Gemini API')
         : (currentLang === 'id' ? 'Buka lewat link Vercel agar AI aktif' : 'Open via Vercel URL to enable live AI');
       document.getElementById('summaryText').textContent = data.summary || '';
 
