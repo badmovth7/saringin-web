@@ -39,45 +39,100 @@ WAJIB kembalikan HANYA JSON valid dengan struktur persis seperti ini:
     let rawText = '';
 
     if (isImage) {
-      // === JALUR GAMBAR: GEMINI + AUTO-RETRY 3x ===
+      const promptText = `Analisis gambar ini.\nCaption/Konteks dari pengguna: "${text || '(tidak ada caption)'}"\nSkor ELA dari browser: ${elaScore ?? 'N/A'}/100.`;
+      let lastError = 'Semua server AI gambar sedang sibuk.';
+
+      // === 1. COBA GEMINI DULU ===
       const geminiKey = process.env.GEMINI_API_KEY;
-      if (!geminiKey) return res.status(500).json({ error: 'GEMINI_API_KEY belum dipasang di Vercel.' });
-
-      const parts = [
-        { text: systemInstruction },
-        { inline_data: { mime_type: mimeType || 'image/jpeg', data: imageBase64 } },
-        { text: `Analisis gambar ini.\nCaption/Konteks dari pengguna: "${text || '(tidak ada caption)'}"\nSkor ELA dari browser: ${elaScore ?? 'N/A'}/100.` }
-      ];
-
-      let data = null;
-      let lastError = 'Server Gemini sedang sibuk.';
-
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${geminiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts }],
-              generationConfig: { responseMimeType: 'application/json', temperature: 0.2 }
-            })
+      if (geminiKey) {
+        try {
+          const geminiRes = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${geminiKey}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{
+                  parts: [
+                    { text: systemInstruction },
+                    { inline_data: { mime_type: mimeType || 'image/jpeg', data: imageBase64 } },
+                    { text: promptText }
+                  ]
+                }],
+                generationConfig: { responseMimeType: 'application/json', temperature: 0.2 }
+              })
+            }
+          );
+          const geminiData = await geminiRes.json();
+          if (geminiRes.ok && geminiData.candidates?.[0]?.content?.parts?.[0]?.text) {
+            rawText = geminiData.candidates[0].content.parts[0].text;
+          } else {
+            lastError = geminiData.error?.message || 'Gemini sedang sibuk.';
           }
-        );
-
-        const tempData = await response.json();
-        if (response.ok) {
-          data = tempData;
-          break;
+        } catch (e) {
+          lastError = e.message;
         }
-        lastError = tempData.error?.message || 'Gemini API error';
-        if (attempt < 3) await new Promise((r) => setTimeout(r, 1500));
       }
 
-      if (!data) return res.status(503).json({ error: lastError });
-      rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      // === 2. CADANGAN OTOMATIS: OPENROUTER (VISION GRATIS) ===
+      if (!rawText) {
+        const openRouterKey = process.env.OPENROUTER_API_KEY;
+        if (!openRouterKey) {
+          return res.status(503).json({ error: `${lastError} (OPENROUTER_API_KEY belum dipasang)` });
+        }
+
+        const fallbackModels = [
+          'qwen/qwen2.5-vl-72b-instruct:free',
+          'google/gemma-3-27b-it:free',
+          'meta-llama/llama-3.2-11b-vision-instruct:free'
+        ];
+
+        for (const model of fallbackModels) {
+          try {
+            const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${openRouterKey}`,
+                'HTTP-Referer': 'https://saringin-web.vercel.app',
+                'X-Title': 'SaringIn'
+              },
+              body: JSON.stringify({
+                model,
+                temperature: 0.2,
+                messages: [
+                  { role: 'system', content: systemInstruction },
+                  {
+                    role: 'user',
+                    content: [
+                      { type: 'text', text: promptText },
+                      {
+                        type: 'image_url',
+                        image_url: { url: `data:${mimeType || 'image/jpeg'};base64,${imageBase64}` }
+                      }
+                    ]
+                  }
+                ]
+              })
+            });
+
+            const orData = await orRes.json();
+            if (orRes.ok && orData.choices?.[0]?.message?.content) {
+              rawText = orData.choices[0].message.content;
+              break;
+            }
+            lastError = orData.error?.message || `Error di ${model}`;
+          } catch (e) {
+            lastError = e.message;
+          }
+        }
+      }
+
+      if (!rawText) {
+        return res.status(503).json({ error: lastError });
+      }
     } else {
-      // === JALUR TEKS: GROQ (SUPER CEPAT) ===
+      // === JALUR TEKS: GROQ ===
       const groqKey = process.env.GROQ_API_KEY;
       if (!groqKey) return res.status(500).json({ error: 'GROQ_API_KEY belum dipasang di Vercel.' });
 
