@@ -82,9 +82,10 @@ WAJIB kembalikan HANYA JSON valid dengan struktur persis seperti ini:
         }
 
         const fallbackModels = [
-          'qwen/qwen2.5-vl-72b-instruct:free',
-          'google/gemma-3-27b-it:free',
-          'meta-llama/llama-3.2-11b-vision-instruct:free'
+          'inclusionai/ling-3.2-flash:free',
+          'google/gemma-4-31b-it:free',
+          'google/gemma-4-26b-a4b-it:free',
+          'nvidia/nemotron-3.5-super-vl:free'
         ];
 
         for (const model of fallbackModels) {
