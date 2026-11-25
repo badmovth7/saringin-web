@@ -125,7 +125,7 @@
       <button id="navVerify" onclick="switchMainTab('verify')" class="py-2.5 rounded-lg border-2 border-black bg-yellow-400 text-black transition" data-i18n="navVerify">
         CONTENT VERIFIER
       </button>
-      <button id="navQuiz" onclick="switchMainTab('quiz')" class="py-2.5 rounded-lg border-2 border-transparent transition" style="color: var(--text-muted);" data-i18n="navQuiz">
+      <button id="navQuiz" onclick="switchMainTab('quiz')" class="py-2.5 rounded-lg border-2 border-transparent transition" data-i18n="navQuiz">
         LITERACY QUIZ
       </button>
     </nav>
@@ -139,7 +139,7 @@
           <button id="subTabImage" onclick="switchInputMode('image')" class="neo-btn px-3 py-2 bg-yellow-400 text-black" data-i18n="tabImage">
             🖼️ IMAGE / SCREENSHOT
           </button>
-          <button id="subTabText" onclick="switchInputMode('text')" class="px-3 py-2 rounded-lg border-2 border-transparent" style="color: var(--text-muted);" data-i18n="tabText">
+          <button id="subTabText" onclick="switchInputMode('text')" class="px-3 py-2 rounded-lg border-2 border-transparent" data-i18n="tabText">
             💬 TEXT / MESSAGE
           </button>
         </div>
@@ -217,7 +217,7 @@
       <section id="loadingSection" class="hidden neo-card p-6 text-center space-y-3">
         <div class="inline-block w-10 h-10 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
         <p id="loadingMsg" class="font-mono-tech text-xs sm:text-sm font-bold" data-i18n="loadingMsg">
-          Running ELA Forensics + Gemini Multimodal AI...
+          Running ELA Forensics + Hybrid Multimodal AI...
         </p>
       </section>
 
@@ -293,7 +293,7 @@
               </div>
               <div>
                 <span id="engineModeBadge" class="inline-block font-mono-tech text-[11px] font-bold px-2.5 py-1 rounded border-2 border-black bg-yellow-400 text-black">
-                  GEMINI AI + ELA
+                  HYBRID AI + ELA
                 </span>
                 <p id="analysisEngineNote" class="font-mono-tech text-[11px] mt-1" style="color: var(--text-muted);"></p>
               </div>
@@ -370,14 +370,14 @@
           <p class="font-mono-tech text-xs" style="color: var(--text-muted);" data-i18n="quizSub">Train your eyes to spot hoaxes, clickbait, and edited screenshots.</p>
         </div>
         <div class="font-mono-tech text-sm font-bold px-3 py-1 rounded-lg border-2 border-black bg-yellow-400 text-black">
-          <span id="quizScore">0</span> / <span id="quizTotal">4</span>
+          <span id="quizScore">0</span> / <span id="quizTotal">5</span>
         </div>
       </div>
       <div id="quizBody" class="space-y-4"></div>
     </section>
 
     <footer class="text-center font-mono-tech text-[11px] py-3" style="color: var(--text-muted);">
-      SaringIn &copy; 2026 — Digital Literacy &amp; Misinformation Verification Prototype
+      SaringIn &copy; 2026 — Built by <strong>HOMEGROUP 10</strong> &bull; Digital Literacy &amp; Misinformation Verification Prototype
     </footer>
   </div>
 
@@ -385,14 +385,10 @@
   <div id="guideModal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
     <div class="neo-card max-w-lg w-full p-5 space-y-3">
       <div class="flex items-center justify-between">
-        <h3 class="font-bold text-lg">📖 SaringIn — How It Works</h3>
+        <h3 id="guideTitle" class="font-bold text-lg">📖 SaringIn — How It Works</h3>
         <button onclick="toggleGuide(false)" class="neo-btn px-2.5 py-1 bg-red-500 text-white font-bold text-xs">✕</button>
       </div>
-      <ul class="text-sm space-y-2 list-disc pl-5" style="color: var(--text-muted);">
-        <li><strong>Hybrid Engine:</strong> Combines browser-side <em>Error Level Analysis (ELA)</em> with <strong>Hybrid Multimodal AI (Gemini, OpenRouter & Groq)</strong>.</li>
-        <li><strong>Context Matching:</strong> Always add the social media caption when checking an image so AI can detect mismatched/parody edits even if the image was re-compressed.</li>
-        <li><strong>Privacy &amp; Speed:</strong> Images are resized in your browser before analysis.</li>
-      </ul>
+      <ul id="guideList" class="text-sm space-y-2 list-disc pl-5" style="color: var(--text-muted);"></ul>
     </div>
   </div>
 
@@ -400,6 +396,7 @@
     // ==================== STATE ====================
     let currentLang = 'en';
     let currentMode = 'image';
+    let currentMainTab = 'verify';
     let uploadedImageDataUrl = null;
     let uploadedMimeType = 'image/jpeg';
     let lastElaScore = 50;
@@ -418,16 +415,24 @@
         dropSub: 'Supports JPG, PNG, WebP (Auto-compressed for fast AI analysis)',
         changeImg: 'CHANGE IMAGE',
         captionLabel: 'ADDITIONAL CONTEXT / CAPTION (HIGHLY RECOMMENDED)',
+        captionPlaceholder: 'e.g., Claimed caption from WhatsApp or X/Twitter...',
         textTitle: 'PASTE NEWS EXCERPT, FORWARDED MESSAGE, OR CLAIM',
+        textPlaceholder: 'Paste suspicious WhatsApp forward, social media caption, or news paragraph here...',
         btnAnalyze: '🔍 ANALYZE CONTENT',
-        loadingMsg: 'Running ELA Forensics + Gemini Multimodal AI...',
+        loadingMsg: 'Running ELA Forensics + Hybrid Multimodal AI...',
         resStatus: 'CONTENT STATUS', riskLabel: 'MANIPULATION RISK', resScore: 'CREDIBILITY SCORE',
         mIntegrity: '🔍 Integrity', mSource: '📌 Source Clarity', mConsistency: '🧩 Consistency',
         resSummary: 'VERIFICATION SUMMARY', disclaimer: 'Digital literacy support tool', btnCopy: '📋 COPY REPORT',
         keyFindings: 'KEY FINDINGS', visualTitle: 'FORENSIC VISUALIZATION',
         elaOverlay: 'OVERLAY', elaSide: 'SIDE-BY-SIDE',
         elaHint: '* Bright glowing areas on ELA indicate recent edits/overlays. Re-saved social media images may flatten ELA, which is why AI visual context is combined.',
-        quizTitle: 'Digital Literacy Challenge', quizSub: 'Train your eyes to spot hoaxes, clickbait, and edited screenshots.'
+        quizTitle: 'Digital Literacy Challenge', quizSub: 'Train your eyes to spot hoaxes, clickbait, and edited screenshots.',
+        guideTitle: '📖 SaringIn — How It Works',
+        guideItems: [
+          '<strong>Hybrid Engine:</strong> Combines browser-side <em>Error Level Analysis (ELA)</em> with <strong>Hybrid Multimodal AI (Gemini, OpenRouter &amp; Groq)</strong>.',
+          '<strong>Context Matching:</strong> Always add the social media caption when checking an image so AI can detect mismatched/parody edits even if the image was re-compressed.',
+          '<strong>Privacy &amp; Speed:</strong> Images are automatically resized in your browser before analysis.'
+        ]
       },
       id: {
         engineLabel: 'MESIN VERIFIKASI DIGITAL V2.0',
@@ -441,16 +446,24 @@
         dropSub: 'Mendukung JPG, PNG, WebP (Otomatis dikompres agar analisis AI cepat)',
         changeImg: 'GANTI GAMBAR',
         captionLabel: 'KONTEKS / CAPTION TAMBAHAN (SANGAT DISARANKAN)',
+        captionPlaceholder: 'Contoh: Klaim caption dari WhatsApp atau X/Twitter...',
         textTitle: 'TEMPEL BERITA, PESAN BERANTAI WA, ATAU KLAIM',
+        textPlaceholder: 'Tempel pesan berantai WA yang mencurigakan, caption medsos, atau cuplikan berita di sini...',
         btnAnalyze: '🔍 ANALISIS KONTEN',
-        loadingMsg: 'Menjalankan Forensik ELA + AI Multimodal Gemini...',
+        loadingMsg: 'Menjalankan Forensik ELA + AI Multimodal Hibrida...',
         resStatus: 'STATUS KONTEN', riskLabel: 'RISIKO MANIPULASI', resScore: 'SKOR KREDIBILITAS',
         mIntegrity: '🔍 Integritas', mSource: '📌 Sumber Jelas', mConsistency: '🧩 Konsistensi',
         resSummary: 'RINGKASAN VERIFIKASI', disclaimer: 'Alat bantu literasi digital', btnCopy: '📋 SALIN RAPOR',
         keyFindings: 'TEMUAN UTAMA', visualTitle: 'VISUALISASI FORENSIK',
         elaOverlay: 'GESER OVERLAY', elaSide: 'BERDAMPINGAN',
         elaHint: '* Area menyala terang pada ELA menandakan editan/timpaan. Foto medsos yang dikompres ulang bisa meratakan ELA, sehingga digabung dengan AI Multimodal.',
-        quizTitle: 'Tantangan Literasi Digital', quizSub: 'Latih ketelitianmu membedakan hoaks, clickbait, dan tangkapan layar editan.'
+        quizTitle: 'Tantangan Literasi Digital', quizSub: 'Latih ketelitianmu membedakan hoaks, clickbait, dan tangkapan layar editan.',
+        guideTitle: '📖 SaringIn — Cara Kerja',
+        guideItems: [
+          '<strong>Mesin Hibrida:</strong> Menggabungkan <em>Error Level Analysis (ELA)</em> di browser dengan <strong>Hybrid Multimodal AI (Gemini, OpenRouter &amp; Groq)</strong>.',
+          '<strong>Pencocokan Konteks:</strong> Selalu tambahkan caption medsos saat memeriksa gambar agar AI bisa mendeteksi editan parodi atau konteks yang melenceng.',
+          '<strong>Privasi &amp; Kecepatan:</strong> Gambar otomatis dikompres di browser sebelum dianalisis.'
+        ]
       }
     };
 
@@ -462,6 +475,10 @@
         const key = el.getAttribute('data-i18n');
         if (i18n[lang][key]) el.textContent = i18n[lang][key];
       });
+      document.getElementById('imageCaption').placeholder = i18n[lang].captionPlaceholder;
+      document.getElementById('textInput').placeholder = i18n[lang].textPlaceholder;
+      document.getElementById('guideTitle').textContent = i18n[lang].guideTitle;
+      document.getElementById('guideList').innerHTML = i18n[lang].guideItems.map(item => `<li>${item}</li>`).join('');
       renderQuiz();
     }
 
@@ -476,23 +493,39 @@
     }
 
     function switchMainTab(tab) {
+      currentMainTab = tab;
       const isVerify = tab === 'verify';
       document.getElementById('viewVerify').classList.toggle('hidden', !isVerify);
       document.getElementById('viewQuiz').classList.toggle('hidden', isVerify);
-      document.getElementById('navVerify').className = isVerify
+
+      const navVerify = document.getElementById('navVerify');
+      const navQuiz = document.getElementById('navQuiz');
+
+      navVerify.className = isVerify
         ? 'py-2.5 rounded-lg border-2 border-black bg-yellow-400 text-black transition'
         : 'py-2.5 rounded-lg border-2 border-transparent transition';
-      document.getElementById('navQuiz').className = !isVerify
+      navVerify.style.color = isVerify ? '#000000' : 'var(--text-muted)';
+
+      navQuiz.className = !isVerify
         ? 'py-2.5 rounded-lg border-2 border-black bg-yellow-400 text-black transition'
         : 'py-2.5 rounded-lg border-2 border-transparent transition';
+      navQuiz.style.color = !isVerify ? '#000000' : 'var(--text-muted)';
     }
 
     function switchInputMode(mode) {
       currentMode = mode;
-      document.getElementById('panelImage').classList.toggle('hidden', mode !== 'image');
-      document.getElementById('panelText').classList.toggle('hidden', mode !== 'text');
-      document.getElementById('subTabImage').className = mode === 'image' ? 'neo-btn px-3 py-2 bg-yellow-400 text-black' : 'px-3 py-2 rounded-lg border-2 border-transparent';
-      document.getElementById('subTabText').className = mode === 'text' ? 'neo-btn px-3 py-2 bg-yellow-400 text-black' : 'px-3 py-2 rounded-lg border-2 border-transparent';
+      const isImg = mode === 'image';
+      document.getElementById('panelImage').classList.toggle('hidden', !isImg);
+      document.getElementById('panelText').classList.toggle('hidden', isImg);
+
+      const tabImg = document.getElementById('subTabImage');
+      const tabTxt = document.getElementById('subTabText');
+
+      tabImg.className = isImg ? 'neo-btn px-3 py-2 bg-yellow-400 text-black' : 'px-3 py-2 rounded-lg border-2 border-transparent';
+      tabImg.style.color = isImg ? '#000000' : 'var(--text-muted)';
+
+      tabTxt.className = !isImg ? 'neo-btn px-3 py-2 bg-yellow-400 text-black' : 'px-3 py-2 rounded-lg border-2 border-transparent';
+      tabTxt.style.color = !isImg ? '#000000' : 'var(--text-muted)';
     }
 
     function resetAll() {
@@ -500,6 +533,9 @@
       document.getElementById('imageCaption').value = '';
       document.getElementById('textInput').value = '';
       document.getElementById('resultSection').classList.add('hidden');
+      quizAnswered = {};
+      document.getElementById('quizScore').textContent = '0';
+      renderQuiz();
     }
 
     // ==================== IMAGE HANDLING & COMPRESSION ====================
@@ -696,7 +732,6 @@
         const aiData = await res.json();
         renderResult(aiData, true);
       } catch (err) {
-        // Fallback offline jika dibuka lokal tanpa Vercel
         const fallback = buildOfflineFallback(currentMode, textPayload, lastElaScore);
         renderResult(fallback, false);
       } finally {
@@ -718,7 +753,7 @@
           metrics: { integrity: elaScore, source: 50, consistency: 55 },
           findings: [
             { title: isID ? 'Skor ELA Browser' : 'Browser ELA Score', detail: `ELA: ${elaScore}/100`, level: 'medium' },
-            { title: isID ? 'AI Belum Aktif' : 'AI Offline', detail: isID ? 'Deploy ke Vercel untuk mengaktifkan Gemini API.' : 'Deploy to Vercel to enable Gemini API.', level: 'medium' },
+            { title: isID ? 'AI Belum Aktif' : 'AI Offline', detail: isID ? 'Deploy ke Vercel untuk mengaktifkan Hybrid AI.' : 'Deploy to Vercel to enable Hybrid AI.', level: 'medium' },
             { title: isID ? 'Cek Konteks' : 'Context Check', detail: isID ? 'Bandingkan visual dengan sumber berita resmi.' : 'Cross-check visual with official news outlets.', level: 'low' },
             { title: isID ? 'Kompresi Medsos' : 'Social Compression', detail: isID ? 'Upload ulang dapat meratakan jejak piksel.' : 'Re-uploads can flatten pixel traces.', level: 'low' }
           ]
@@ -731,7 +766,7 @@
         score,
         status: score < 45 ? 'MANIPULATED' : score > 70 ? 'CREDIBLE' : 'VERIFY',
         headline: score < 45 ? (isID ? 'INDIKASI HOAKS' : 'HIGH HOAX RISK') : score > 70 ? (isID ? 'CENDERUNG KREDIBEL' : 'LIKELY CREDIBLE') : (isID ? 'PERLU VERIFIKASI' : 'NEEDS VERIFICATION'),
-        summary: isID ? 'Analisis heuristik offline selesai. Deploy ke Vercel untuk analisis konteks mendalam oleh Gemini AI.' : 'Offline heuristic scan complete. Deploy to Vercel for deep Gemini AI context analysis.',
+        summary: isID ? 'Analisis heuristik offline selesai. Deploy ke Vercel untuk analisis konteks mendalam oleh Hybrid AI.' : 'Offline heuristic scan complete. Deploy to Vercel for deep Hybrid AI context analysis.',
         metrics: { integrity: score, source: score > 60 ? 75 : 30, consistency: score },
         findings: [
           { title: isID ? 'Pola Urgensi' : 'Urgency Pattern', detail: `${redFlags} trigger(s) detected.`, level: redFlags > 1 ? 'high' : 'low' },
@@ -777,7 +812,7 @@
 
       document.getElementById('engineModeBadge').textContent = isLiveAI ? 'HYBRID AI + ELA' : 'OFFLINE FALLBACK MODE';
       document.getElementById('analysisEngineNote').textContent = isLiveAI
-        ? (currentLang === 'id' ? 'Terhubung ke Mesin Verifikasi Multi-AI' : 'Connected live to Gemini API')
+        ? (currentLang === 'id' ? 'Terhubung ke Mesin Verifikasi Multi-AI' : 'Connected to Multi-AI Verification Engine')
         : (currentLang === 'id' ? 'Buka lewat link Vercel agar AI aktif' : 'Open via Vercel URL to enable live AI');
       document.getElementById('summaryText').textContent = data.summary || '';
 
@@ -827,19 +862,65 @@
       alert(currentLang === 'id' ? 'Rapor berhasil disalin!' : 'Report copied to clipboard!');
     }
 
-    // ==================== LITERACY QUIZ ====================
+    // ==================== LITERACY QUIZ (5 QUESTIONS) ====================
     const quizData = [
       {
-        q: { en: 'A viral WhatsApp message urges you to click a shortened link (bit.ly) within 2 hours or your bank account will be frozen. What is the strongest red flag?', id: 'Pesan WA viral menyuruh klik link pendek (bit.ly) dalam 2 jam atau rekening diblokir. Apa tanda bahaya utamanya?' },
-        opts: { en: ['Artificial urgency & unofficial shortlink', 'It was sent in the morning'], id: ['Urgensi palsu & tautan pendek tidak resmi', 'Dikirim pada pagi hari'] },
+        q: {
+          en: 'A viral WhatsApp message urges you to click a shortened link (bit.ly) within 2 hours or your bank account will be frozen. What is the strongest red flag?',
+          id: 'Pesan WA viral menyuruh klik link pendek (bit.ly) dalam 2 jam atau rekening diblokir. Apa tanda bahaya utamanya?'
+        },
+        opts: {
+          en: ['Artificial urgency & unofficial shortlink', 'It was sent in the morning'],
+          id: ['Urgensi palsu & tautan pendek tidak resmi', 'Dikirim pada pagi hari']
+        },
         ans: 0
       },
       {
-        q: { en: 'Why might an edited meme/screenshot still look "normal" on an ELA pixel scan?', id: 'Mengapa gambar editan/meme terkadang terlihat "normal" pada pemindaian piksel ELA?' },
-        opts: { en: ['Social media re-compression flattens JPEG differences', 'ELA only works on black-and-white photos'], id: ['Kompresi ulang medsos meratakan perbedaan JPEG', 'ELA hanya bekerja pada foto hitam putih'] },
+        q: {
+          en: 'Why might an edited meme/screenshot still look "normal" on an ELA pixel scan?',
+          id: 'Mengapa gambar editan/meme terkadang terlihat "normal" pada pemindaian piksel ELA?'
+        },
+        opts: {
+          en: ['Social media re-compression flattens JPEG differences', 'ELA only works on black-and-white photos'],
+          id: ['Kompresi ulang medsos meratakan perbedaan JPEG', 'ELA hanya bekerja pada foto hitam putih']
+        },
+        ans: 0
+      },
+      {
+        q: {
+          en: 'A photo of a public figure looks ultra-smooth, but they have 6 fingers and garbled background text. What is the main indication?',
+          id: 'Sebuah foto tokoh publik tampak sangat mulus, tetapi jari tangannya berjumlah 6 dan teks di latar belakangnya tampak acak. Apa indikasi utamanya?'
+        },
+        opts: {
+          en: ['The image is likely AI-generated', 'The camera used had low resolution'],
+          id: ['Gambar kemungkinan besar dibuat oleh AI (AI-Generated)', 'Kamera yang digunakan beresolusi rendah']
+        },
+        ans: 0
+      },
+      {
+        q: {
+          en: 'A flash flood video goes viral claiming "Happening right now in City X", even though the weather is sunny. What is the fastest verification step?',
+          id: 'Video banjir bandang viral dengan narasi "Baru saja terjadi hari ini di kota X", padahal cuaca sedang cerah. Langkah verifikasi tercepat adalah...'
+        },
+        opts: {
+          en: ['Run a Reverse Image Search (Google Lens) on a video screenshot', 'Immediately forward it to family groups so everyone stays alert'],
+          id: ['Lakukan Reverse Image Search (Google Lens) dari tangkapan layar video', 'Langsung bagikan ke grup keluarga agar semua waspada']
+        },
+        ans: 0
+      },
+      {
+        q: {
+          en: 'A headline reads: "SHOCKING! This Device Gives Free Electricity Forever, Utility Companies Panic!". What misinformation trait is shown?',
+          id: 'Judul berita berbunyi: "MENGEJUTKAN! Benda Ini Bisa Bikin Listrik Gratis Selamanya, PLN Panik!". Apa ciri misinformasi pada judul tersebut?'
+        },
+        opts: {
+          en: ['Sensational clickbait & unrealistic claim without official sources', 'Using an exclamation mark at the end of the sentence'],
+          id: ['Bahasa sensasional (clickbait) & klaim tidak masuk akal tanpa sumber resmi', 'Menggunakan tanda seru di akhir kalimat']
+        },
         ans: 0
       }
     ];
+
     let quizAnswered = {};
     function renderQuiz() {
       document.getElementById('quizTotal').textContent = quizData.length;
@@ -869,6 +950,8 @@
     }
 
     // Init
+    switchMainTab('verify');
+    switchInputMode('image');
     setLang('en');
   </script>
 </body>
